@@ -33,15 +33,15 @@ jobs:
 
       - name: Install .NET dependencies
         run: dotnet restore
-        working-directory: librarymanagementsystem-backend
+        working-directory: librarymanagementsystem-backend/src/librarymanagementsystembackend/WebAPI
 
       - name: Build .NET project
         run: dotnet build --configuration Release
-        working-directory: librarymanagementsystem-backend
+        working-directory: librarymanagementsystem-backend/src/librarymanagementsystembackend/WebAPI
 
       - name: Start .NET API server
         run: |
-          dotnet run --no-build --project librarymanagementsystem-backend &
+          dotnet run --no-build --project librarymanagementsystem-backend/src/librarymanagementsystembackend/WebAPI/WebAPI.csproj &
           Start-Sleep -s 30 # Wait for the server to start
 
       - name: Install Postman CLI
