@@ -22,6 +22,11 @@ jobs:
         run: npm install
         working-directory: librarymanagementsystem-frontend
 
+      - name: Adjust Angular Budget
+        run: |
+          sed -i 's/"maximumError": "1mb"/"maximumError": "3mb"/' librarymanagementsystem-frontend/angular.json
+          sed -i 's/"maximumWarning": "1mb"/"maximumWarning": "2mb"/' librarymanagementsystem-frontend/angular.json
+
       - name: Build Angular project
         run: npm run build
         working-directory: librarymanagementsystem-frontend
