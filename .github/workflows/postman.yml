@@ -42,7 +42,7 @@ jobs:
       - name: Start .NET API server
         run: |
           dotnet run --no-build --project librarymanagementsystem-backend &
-          Start-Sleep -s 10 # Wait for the server to start
+          Start-Sleep -s 30 # Wait for the server to start
 
       - name: Install Postman CLI
         run: |
