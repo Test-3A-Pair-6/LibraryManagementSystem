@@ -7,19 +7,45 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '8.0.205'
+
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '14'
-      - name: Install dependencies
+          node-version: '20.11.1'
+
+      - name: Install Node.js dependencies
         run: npm install
-      - name: Start API server
-        run: npm start & # Modify this command to start your API server
+        working-directory: https://github.com/Test-3A-Pair-6/LibraryManagementSystem/tree/main/librarymanagementsystem-frontend
+
+      - name: Build Angular project
+        run: npm run build
+        working-directory: https://github.com/Test-3A-Pair-6/LibraryManagementSystem/tree/main/librarymanagementsystem-frontend
+
+      - name: Install .NET dependencies
+        run: dotnet restore
+        working-directory: https://github.com/Test-3A-Pair-6/LibraryManagementSystem/tree/main/librarymanagementsystem-backend
+
+      - name: Build .NET project
+        run: dotnet build --configuration Release
+        working-directory: https://github.com/Test-3A-Pair-6/LibraryManagementSystem/tree/main/librarymanagementsystem-backend
+
+      - name: Start .NET API server
+        run: |
+          dotnet run --no-build --project https://github.com/Test-3A-Pair-6/LibraryManagementSystem/tree/main/librarymanagementsystem-backend
+          Start-Sleep -s 10 # Wait for the server to start
+
       - name: Install Postman CLI
         run: |
           powershell.exe -NoProfile -InputFormat None -ExecutionPolicy AllSigned -Command "[System.Net.ServicePointManager]::SecurityProtocol = 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://dl-cli.pstmn.io/install/win64.ps1'))"
+
       - name: Login to Postman CLI
         run: postman login --with-api-key ${{ secrets.POSTMAN_API_KEY }}
+
       - name: Run API tests
         run: |
           postman collection run "24412719-c07f3885-9a3d-4d2e-98b9-82c42e0a57fa" -e "24412719-04416698-a03d-471a-834a-38bf4922a759"
