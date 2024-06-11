@@ -41,8 +41,9 @@ jobs:
 
       - name: Start .NET API server
         run: |
-          dotnet run --no-build --project librarymanagementsystem-backend/src/librarymanagementsystembackend/WebAPI/WebAPI.csproj &
-          Start-Sleep -s 30 # Wait for the server to start
+          dotnet run --no-build --project librarymanagementsystem-backend/src/librarymanagementsystembackend/WebAPI/WebAPI.csproj > dotnet_server_log.txt &
+          Start-Sleep -s 60 # Wait longer for the server to start
+          cat dotnet_server_log.txt
 
       - name: Install Postman CLI
         run: |
