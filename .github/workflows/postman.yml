@@ -41,15 +41,14 @@ jobs:
 
       - name: Start .NET API server
         run: |
-          dotnet run --no-build --project librarymanagementsystem-backend/src/librarymanagementsystembackend/WebAPI/WebAPI.csproj > dotnet_server_log.txt &
+          dotnet run --no-build --project librarymanagementsystem-backend/src/librarymanagementsystembackend/WebAPI/WebAPI.csproj > dotnet_server_log.txt 2>&1 &
           Start-Sleep -s 60 # Wait longer for the server to start
           cat dotnet_server_log.txt
 
       - name: Check if API server is up
         run: |
           echo "Checking if API server is up..."
-          sleep 10 # Extra wait to ensure server is up
-          curl -I http://localhost:60805/swagger/v1/swagger.json
+          curl -I http://localhost:60805/swagger/index.html
 
       - name: Install Postman CLI
         run: |
