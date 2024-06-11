@@ -45,6 +45,12 @@ jobs:
           Start-Sleep -s 60 # Wait longer for the server to start
           cat dotnet_server_log.txt
 
+      - name: Check if API server is up
+        run: |
+          echo "Checking if API server is up..."
+          sleep 10 # Extra wait to ensure server is up
+          curl -I http://localhost:60805/swagger/v1/swagger.json
+
       - name: Install Postman CLI
         run: |
           powershell.exe -NoProfile -InputFormat None -ExecutionPolicy AllSigned -Command "[System.Net.ServicePointManager]::SecurityProtocol = 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://dl-cli.pstmn.io/install/win64.ps1'))"
