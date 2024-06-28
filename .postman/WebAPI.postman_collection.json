@@ -157,10 +157,10 @@
                           }
                         },
                         "url": {
-                          "raw": "http://localhost:60805/api/Auth/Login",
-                          "protocol": "http",
+                          "raw": "https://localhost:44300/api/Auth/Login",
+                          "protocol": "https",
                           "host": ["localhost"],
-                          "port": "60805",
+                          "port": "44300",
                           "path": ["api", "Auth", "Login"]
                         }
                       },
@@ -275,10 +275,10 @@
                           }
                         },
                         "url": {
-                          "raw": "http://localhost:60805/api/Auth/Register",
-                          "protocol": "http",
+                          "raw": "https://localhost:44300/api/Auth/Register",
+                          "protocol": "https",
                           "host": ["localhost"],
-                          "port": "60805",
+                          "port": "44300",
                           "path": ["api", "Auth", "Register"]
                         }
                       },
@@ -2679,10 +2679,10 @@
                           }
                         ],
                         "url": {
-                          "raw": "http://localhost:60805/api/Addresses/:id",
-                          "protocol": "http",
+                          "raw": "https://localhost:44300/api/Addresses/:id",
+                          "protocol": "https",
                           "host": ["localhost"],
-                          "port": "60805",
+                          "port": "44300",
                           "path": ["api", "Addresses", ":id"],
                           "variable": [
                             {
@@ -2741,10 +2741,10 @@
                           }
                         ],
                         "url": {
-                          "raw": "http://localhost:60805/api/Addresses/:id",
-                          "protocol": "http",
+                          "raw": "https://localhost:44300/api/Addresses/:id",
+                          "protocol": "https",
                           "host": ["localhost"],
-                          "port": "60805",
+                          "port": "44300",
                           "path": ["api", "Addresses", ":id"],
                           "variable": [
                             {
@@ -2924,10 +2924,10 @@
                       }
                     },
                     "url": {
-                      "raw": "http://localhost:60805/api/Addresses",
-                      "protocol": "http",
+                      "raw": "https://localhost:44300/api/Addresses",
+                      "protocol": "https",
                       "host": ["localhost"],
-                      "port": "60805",
+                      "port": "44300",
                       "path": ["api", "Addresses"]
                     }
                   },
@@ -3003,10 +3003,10 @@
                       }
                     },
                     "url": {
-                      "raw": "http://localhost:60805/api/Addresses",
-                      "protocol": "http",
+                      "raw": "https://localhost:44300/api/Addresses",
+                      "protocol": "https",
                       "host": ["localhost"],
-                      "port": "60805",
+                      "port": "44300",
                       "path": ["api", "Addresses"]
                     }
                   },
@@ -3138,10 +3138,10 @@
                       }
                     ],
                     "url": {
-                      "raw": "http://localhost:60805/api/Addresses?PageIndex=<integer>&PageSize=<integer>",
-                      "protocol": "http",
+                      "raw": "https://localhost:44300/api/Addresses?PageIndex=<integer>&PageSize=<integer>",
+                      "protocol": "https",
                       "host": ["localhost"],
-                      "port": "60805",
+                      "port": "44300",
                       "path": ["api", "Addresses"],
                       "query": [
                         {
