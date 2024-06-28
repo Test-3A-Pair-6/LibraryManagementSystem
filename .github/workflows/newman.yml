@@ -1,38 +1,23 @@
-name: Postman API Tests
+name: Run Newman Tests
 
 on: [push, pull_request]
 
 jobs:
-  test:
+  newman-test:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
+    - name: Checkout repository
       uses: actions/checkout@v2
 
-    - name: Install Node.js
+    - name: Set up Node.js
       uses: actions/setup-node@v2
       with:
-        node-version: '20.11.1'
-
-    - name: Install dependencies
-      run: npm install
-
-    - name: Start API server
-      run: npm start & # Start your API server here
-      env:
-        NODE_ENV: test
-
-    - name: Wait for API server to be ready
-      run: |
-        echo "Checking if API server is up..."
-        until $(curl --output /dev/null --silent --head --fail http://localhost:60805/swagger/index.html); do
-          printf '.'
-          sleep 5
-        done
+        node-version: '14'
 
     - name: Install Newman
       run: npm install -g newman
 
-    - name: Run Postman Tests
-      run: newman run ./postman/WebAPI.postman_collection.json -e ./postman/LibraryEnv.postman_environment.json
+    - name: Run Newman tests
+      run: |
+        newman run ./postman/WebAPI.postman_collection.json -e ./postman/LibraryEnv.postman_environment.json
