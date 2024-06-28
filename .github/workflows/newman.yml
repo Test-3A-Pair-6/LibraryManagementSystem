@@ -15,6 +15,22 @@ jobs:
       with:
         node-version: '20.11.1'
 
+    - name: Install dependencies
+      run: npm install
+
+    - name: Start API server
+      run: npm start & # Start your API server here
+      env:
+        NODE_ENV: test
+
+    - name: Wait for API server to be ready
+      run: |
+        echo "Checking if API server is up..."
+        until $(curl --output /dev/null --silent --head --fail http://localhost:60805/swagger/index.html); do
+          printf '.'
+          sleep 5
+        done
+
     - name: Install Newman
       run: npm install -g newman
 
