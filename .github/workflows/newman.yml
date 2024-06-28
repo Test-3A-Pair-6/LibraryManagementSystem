@@ -35,4 +35,4 @@ jobs:
       run: npm install -g newman
 
     - name: Run Postman Tests
-      run: newman run ./Postman/app-11.2.0/WebAPI.postman_collection.json -e ./Postman/app-11.2.0/LibraryEnv.postman_environment.json
+      run: newman run ./postman/WebAPI.postman_collection.json -e ./postman/LibraryEnv.postman_environment.json
