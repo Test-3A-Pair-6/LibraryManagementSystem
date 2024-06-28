@@ -1,0 +1,22 @@
+name: Postman API Tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Install Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '20.11.1'
+
+    - name: Install Newman
+      run: npm install -g newman
+
+    - name: Run Postman Tests
+      run: newman run ./Postman/app-11.2.0/WebAPI.postman_collection.json -e ./Postman/app-11.2.0/LibraryEnv.postman_environment.json
