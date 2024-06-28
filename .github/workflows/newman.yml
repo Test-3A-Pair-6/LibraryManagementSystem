@@ -20,4 +20,4 @@ jobs:
 
     - name: Run Newman tests
       run: |
-        newman run ./postman/WebAPI.postman_collection.json -e ./postman/LibraryEnv.postman_environment.json
+        newman run ./postman/WebAPI.postman_collection.json -e ./postman/LibraryEnv.postman_environment.json --insecure
