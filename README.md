@@ -1,4 +1,132 @@
+# Capstone Project: API Testing with Postman CLI and Newman in GitHub Actions
 
+## Overview
+
+This repository contains the configuration and scripts for running API tests using Postman CLI and Newman within GitHub Actions. As part of my capstone project, I aimed to integrate automated API testing into the CI/CD pipeline, showcasing the capabilities of Postman CLI and Newman. I forked the main development repo to ensure topic integrity.
+
+## Project Details
+
+### Project Name
+
+Capstone Project: Automated API Testing
+
+### Author
+
+Miray Sönmez
+
+## Description
+
+This project demonstrates how to set up and run automated API tests using Postman CLI and Newman in a continuous integration (CI) pipeline via GitHub Actions. The tests are configured to run against API endpoints to ensure their functionality and reliability.
+
+### Objectives
+
+- Integrate Postman CLI and Newman for automated API testing.
+- Configure GitHub Actions to run the tests as part of the CI pipeline.
+- Demonstrate the process and configuration through a well-documented README.
+
+## Tools and Technologies
+
+- **Postman CLI**: Command-line tool to interact with Postman APIs.
+- **Newman**: Command-line collection runner for Postman.
+- **GitHub Actions**: CI/CD platform for automating workflows.
+- **Node.js**: JavaScript runtime for executing Newman.
+
+## GitHub Actions Workflow
+
+### YAML Configuration
+
+The GitHub Actions workflow is defined in the `.github/workflows/newman.yml` file. Below is the configuration:
+
+```
+yaml
+Copy code
+name: Run Newman Tests
+
+on: [push, pull_request]
+
+jobs:
+  newman-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14'
+
+    - name: Install Newman
+      run: npm install -g newman
+
+    - name: Run Newman tests
+      run: |
+        newman run ./postman/WebAPI.postman_collection.json -e ./postman/LibraryEnv.postman_environment.json --insecure
+
+```
+
+### Explanation
+
+- **Checkout Repository**: Checks out the repository to the runner.
+- **Set up Node.js**: Sets up the Node.js environment required to run Newman.
+- **Install Newman**: Installs Newman globally using npm.
+- **Run Newman Tests**: Executes the Postman collection tests using Newman. The `--insecure` flag is used to bypass self-signed certificate issues.
+
+## Local Setup
+
+To run the tests locally using Postman CLI and Newman, follow these steps:
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org/en/download/) installed.
+- [Postman](https://www.postman.com/downloads/) installed.
+
+### Steps
+
+1. **Install Newman**:
+    ```sh
+    npm install -g newman
+    ```
+
+2. **Run Newman Tests**:
+    ```sh
+    newman run "C:\Users\Miray\AppData\Local\Postman\app-11.2.0\WebAPI.postman_collection.json" -e "C:\Users\Miray\AppData\Local\Postman\app-11.2.0\LibraryEnv.postman_environment.json" --insecure
+    ```
+
+### Localhost Limitation
+Due to the limitations of running tests on localhost, the above GitHub Actions configuration is demonstrated without an actual deployment of the backend service. In a real-world scenario, the backend would need to be deployed to a public environment accessible by GitHub Actions.
+
+### Note
+
+The current configuration and tests are designed to run against a local instance of the API. Since the API is not deployed to a public environment, the GitHub Actions workflow will not be able to execute the tests successfully. The configuration files and scripts serve as a demonstration of the setup process.
+
+## Files and Structure
+
+- **`.github/workflows/newman.yml`**: GitHub Actions workflow configuration.
+- **`postman/WebAPI.postman_collection.json`**: Postman collection file.
+- **`postman/LibraryEnv.postman_environment.json`**: Postman environment file.
+
+## Conclusion
+
+This capstone project showcases the integration of Postman CLI and Newman in a CI pipeline using GitHub Actions. Despite the limitation of not having access to a deployed API, the configuration and scripts demonstrate the ability to set up and automate API tests effectively.
+
+  For any inquiries or further information, please reach out through my GitHub profile: [chiturca](https://github.com/chiturca).  
+
+<br/>
+
+ ***Miray Sönmez***  
+<p>
+ Software Tester
+</p>
+
+<br/>
+<br/>
+<br/>
+
+
+
+------------------------------------------------------------------------------------------------------------------------------------
 
 <p align="center">
 </p>
