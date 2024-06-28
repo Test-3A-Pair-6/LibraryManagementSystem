@@ -1,0 +1,3197 @@
+{
+  "info": {
+    "_postman_id": "c07f3885-9a3d-4d2e-98b9-82c42e0a57fa",
+    "name": "WebAPI",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "24412719"
+  },
+  "item": [
+    {
+      "name": "api",
+      "item": [
+        {
+          "name": "Auth",
+          "item": [
+            {
+              "name": "Login",
+              "item": [
+                {
+                  "name": "/api/Auth/Login",
+                  "event": [
+                    {
+                      "listen": "prerequest",
+                      "script": {
+                        "exec": [
+                          "console.clear()\r",
+                          "//Kullanıcının tokenini, refresh token ile otomatik değiştir\r",
+                          "// Environmenttan son kullanma tarihini al\r",
+                          "var expirationDateStr = pm.environment.get(\"expiration\");\r",
+                          "var expirationDate = new Date(expirationDateStr);\r",
+                          "var currentTime = new Date();\r",
+                          "\r",
+                          "// Tokenin süresinin dolup dolmadığını kontrol et\r",
+                          "if (currentTime >= expirationDate) {\r",
+                          "    // Süresi dolmuşsa, tokenin yenilenmesi için bir istek gönder\r",
+                          "    pm.sendRequest({\r",
+                          "        url: pm.environment.get(\"baseUrl\") + \"/api/Auth/RefreshToken\",\r",
+                          "        method: \"GET\",\r",
+                          "        header: {\r",
+                          "            \"accept\": \"*/*\",\r",
+                          "            \"Authorization\": \"Bearer \" + pm.environment.get(\"bearerToken\")\r",
+                          "        }\r",
+                          "    }, function (err, res) {\r",
+                          "        if (err) {\r",
+                          "            console.log(\"Error refreshing token: \" + err);\r",
+                          "        } else {\r",
+                          "            // Ortam değişkenlerini yeni token ve son kullanma tarihi ile güncelle\r",
+                          "            var jsonData = res.json();\r",
+                          "            pm.environment.set(\"bearerToken\", jsonData.token);\r",
+                          "            pm.environment.set(\"expiration\", jsonData.expirationDate);\r",
+                          "        }\r",
+                          "    });\r",
+                          "}"
+                        ],
+                        "type": "text/javascript"
+                      }
+                    },
+                    {
+                      "listen": "test",
+                      "script": {
+                        "exec": [
+                          "var jsonData = pm.response.json();\r",
+                          "//Tokeni sitenin her yerine taşır.\r",
+                          "pm.environment.set(\"bearerToken\", jsonData.accessToken.token);\r",
+                          "//\r",
+                          "//Giriş işleminin başarılı olduğunu doğrular\r",
+                          "pm.test(\"Status code is 200\", function () {\r",
+                          "    pm.response.to.have.status(200);\r",
+                          "});\r",
+                          "//Yanıt zamanının 200 milisaniyeden kısa olduğunu doğrular\r",
+                          "pm.test(\"Response time is less than 200ms\", function () {\r",
+                          "    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+                          "});\r",
+                          "//Token zaman aşımının olmadığını doğrular\r",
+                          "var expirationDateStr = jsonData.accessToken.expirationDate; //String-zaman aşımını alır\r",
+                          "pm.environment.set(\"expiration\", expirationDateStr); //Response-zaman aşımı(string)\r",
+                          "var expirationDate = new Date(expirationDateStr); //String'i Date yapar\r",
+                          "var currentTime = new Date(); //Şu anı al\r",
+                          "var timeUntilExpiration = expirationDate - currentTime; //Milisaniye olarak zaman\r",
+                          "var timeUntilExpirationMinutes = timeUntilExpiration / (1000 * 60); //saniyeye çevir\r",
+                          "pm.test(\"Token expiration date is in the future\", function () {\r",
+                          "    pm.expect(expirationDate).to.be.above(currentTime);\r",
+                          "});\r",
+                          "//Zaman aşımının kabul edilebilir bir aralıkta olduğunu doğrular\r",
+                          "pm.test(\"Token expires within a reasonable time range\", function () {\r",
+                          "    var minExpirationMinutes = 10; // Minimum kabul edilir zaman aşımı(dakika)\r",
+                          "    var maxExpirationMinutes = 120; // Maximum kabul edilir zaman aşımı(dakika)\r",
+                          "    pm.expect(timeUntilExpirationMinutes).to.be.within(minExpirationMinutes, maxExpirationMinutes);\r",
+                          "});\r",
+                          ""
+                        ],
+                        "type": "text/javascript"
+                      }
+                    }
+                  ],
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{bearerToken}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "{{bearerToken}}",
+                        "value": ""
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"email\": \"narch@kodlama.io\", \"password\": \"Passw0rd!\" \n}",
+                      "options": {
+                        "raw": {
+                          "headerFamily": "json",
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{baseUrl}}/api/Auth/Login",
+                      "host": ["{{baseUrl}}"],
+                      "path": ["api", "Auth", "Login"]
+                    }
+                  },
+                  "response": [
+                    {
+                      "name": "Success",
+                      "originalRequest": {
+                        "method": "POST",
+                        "header": [
+                          {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                          },
+                          {
+                            "key": "Authorization",
+                            "value": "Bearer <token>",
+                            "description": "Added as a part of security scheme: bearer"
+                          }
+                        ],
+                        "body": {
+                          "mode": "raw",
+                          "raw": "{\n  \"email\": \"<string>\",\n  \"password\": \"<string>\"\n}",
+                          "options": {
+                            "raw": {
+                              "headerFamily": "json",
+                              "language": "json"
+                            }
+                          }
+                        },
+                        "url": {
+                          "raw": "http://localhost:60805/api/Auth/Login",
+                          "protocol": "http",
+                          "host": ["localhost"],
+                          "port": "60805",
+                          "path": ["api", "Auth", "Login"]
+                        }
+                      },
+                      "status": "OK",
+                      "code": 200,
+                      "_postman_previewlanguage": "text",
+                      "header": [],
+                      "cookie": [],
+                      "body": ""
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "Register",
+              "item": [
+                {
+                  "name": "/api/Auth/Register",
+                  "event": [
+                    {
+                      "listen": "prerequest",
+                      "script": {
+                        "exec": ["console.clear()\r", ""],
+                        "type": "text/javascript",
+                        "packages": {}
+                      }
+                    },
+                    {
+                      "listen": "test",
+                      "script": {
+                        "exec": [
+                          "var jsonData = pm.response.json();\r",
+                          "\r",
+                          "pm.test(\"Successful POST request\", function () {\r",
+                          "    pm.expect(pm.response.code).to.be.oneOf([201, 202]);\r",
+                          "});\r",
+                          "\r",
+                          "pm.test(\"Response time is less than 200ms\", function () {\r",
+                          "    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+                          "});\r",
+                          "\r",
+                          "pm.test(\"Token expiration date is in the future\", function () {\r",
+                          "    var expirationDate = new Date(jsonData.expirationDate);\r",
+                          "    var currentTime = new Date();\r",
+                          "    pm.expect(expirationDate).to.be.above(currentTime);\r",
+                          "});"
+                        ],
+                        "type": "text/javascript",
+                        "packages": {}
+                      }
+                    }
+                  ],
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{bearerToken}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"user\": {\n    \"email\": \"{{$randomEmail}}\",\n    \"password\": \"Test-3aPair-6\"\n  },\n  \"firstName\": \"{{$randomFirstName}}\",\n  \"lastName\": \"{{$randomLastName}}\",\n  \"nationalIdentity\": \"12433241752\",\n  \"phoneNumber\": \"05555555555\"\n}",
+                      "options": {
+                        "raw": {
+                          "headerFamily": "json",
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{baseUrl}}/api/Auth/Register",
+                      "host": ["{{baseUrl}}"],
+                      "path": ["api", "Auth", "Register"]
+                    }
+                  },
+                  "response": [
+                    {
+                      "name": "Success",
+                      "originalRequest": {
+                        "method": "POST",
+                        "header": [
+                          {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                          },
+                          {
+                            "key": "Authorization",
+                            "value": "Bearer <token>",
+                            "description": "Added as a part of security scheme: bearer"
+                          }
+                        ],
+                        "body": {
+                          "mode": "raw",
+                          "raw": "{\n  \"user\": {\n    \"email\": \"<string>\",\n    \"password\": \"<string>\"\n  },\n  \"firstName\": \"<string>\",\n  \"lastName\": \"<string>\",\n  \"nationalIdentity\": \"<string>\",\n  \"phoneNumber\": \"<string>\"\n}",
+                          "options": {
+                            "raw": {
+                              "headerFamily": "json",
+                              "language": "json"
+                            }
+                          }
+                        },
+                        "url": {
+                          "raw": "http://localhost:60805/api/Auth/Register",
+                          "protocol": "http",
+                          "host": ["localhost"],
+                          "port": "60805",
+                          "path": ["api", "Auth", "Register"]
+                        }
+                      },
+                      "status": "OK",
+                      "code": 200,
+                      "_postman_previewlanguage": "text",
+                      "header": [],
+                      "cookie": [],
+                      "body": ""
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Cities",
+          "item": [
+            {
+              "name": "{id}",
+              "item": [
+                {
+                  "name": "/api/Cities/:id",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{bearerToken}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "DELETE",
+                    "header": [],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/Cities/:id",
+                      "host": ["{{baseUrl}}"],
+                      "path": ["api", "Cities", ":id"],
+                      "variable": [
+                        {
+                          "key": "id",
+                          "value": "<uuid>",
+                          "description": "(Required) "
+                        }
+                      ]
+                    }
+                  },
+                  "response": [
+                    {
+                      "name": "Success",
+                      "originalRequest": {
+                        "method": "DELETE",
+                        "header": [
+                          {
+                            "key": "Authorization",
+                            "value": "Bearer <token>",
+                            "description": "Added as a part of security scheme: bearer"
+                          }
+                        ],
+                        "url": {
+                          "raw": "{{baseUrl}}/api/Cities/:id",
+                          "host": ["{{baseUrl}}"],
+                          "path": ["api", "Cities", ":id"],
+                          "variable": [
+                            {
+                              "key": "id"
+                            }
+                          ]
+                        }
+                      },
+                      "status": "OK",
+                      "code": 200,
+                      "_postman_previewlanguage": "text",
+                      "header": [],
+                      "cookie": [],
+                      "body": ""
+                    }
+                  ]
+                },
+                {
+                  "name": "/api/Cities/:id",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{bearerToken}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/Cities/:id",
+                      "host": ["{{baseUrl}}"],
+                      "path": ["api", "Cities", ":id"],
+                      "variable": [
+                        {
+                          "key": "id",
+                          "value": "<uuid>",
+                          "description": "(Required) "
+                        }
+                      ]
+                    }
+                  },
+                  "response": [
+                    {
+                      "name": "Success",
+                      "originalRequest": {
+                        "method": "GET",
+                        "header": [
+                          {
+                            "key": "Authorization",
+                            "value": "Bearer <token>",
+                            "description": "Added as a part of security scheme: bearer"
+                          }
+                        ],
+                        "url": {
+                          "raw": "{{baseUrl}}/api/Cities/:id",
+                          "host": ["{{baseUrl}}"],
+                          "path": ["api", "Cities", ":id"],
+                          "variable": [
+                            {
+                              "key": "id"
+                            }
+                          ]
+                        }
+                      },
+                      "status": "OK",
+                      "code": 200,
+                      "_postman_previewlanguage": "text",
+                      "header": [],
+                      "cookie": [],
+                      "body": ""
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "Dynamic",
+              "item": [
+                {
+                  "name": "/api/Cities/Dynamic",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{bearerToken}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"sort\": [\n    {\n      \"field\": \"<string>\",\n      \"dir\": \"<string>\"\n    },\n    {\n      \"field\": \"<string>\",\n      \"dir\": \"<string>\"\n    }\n  ],\n  \"filter\": {\n    \"field\": \"<string>\",\n    \"operator\": \"<string>\",\n    \"value\": \"<string>\",\n    \"logic\": \"<string>\",\n    \"filters\": [\n      {\n        \"value\": \"<Circular reference to #/components/schemas/Filter detected>\"\n      },\n      {\n        \"value\": \"<Circular reference to #/components/schemas/Filter detected>\"\n      }\n    ]\n  }\n}",
+                      "options": {
+                        "raw": {
+                          "headerFamily": "json",
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{baseUrl}}/api/Cities/Dynamic?PageIndex=0&PageSize=5",
+                      "host": ["{{baseUrl}}"],
+                      "path": ["api", "Cities", "Dynamic"],
+                      "query": [
+                        {
+                          "key": "PageIndex",
+                          "value": "0"
+                        },
+                        {
+                          "key": "PageSize",
+                          "value": "5"
+                        }
+                      ]
+                    }
+                  },
+                  "response": [
+                    {
+                      "name": "Success",
+                      "originalRequest": {
+                        "method": "POST",
+                        "header": [
+                          {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                          },
+                          {
+                            "key": "Authorization",
+                            "value": "Bearer <token>",
+                            "description": "Added as a part of security scheme: bearer"
+                          }
+                        ],
+                        "body": {
+                          "mode": "raw",
+                          "raw": "{\n  \"sort\": [\n    {\n      \"field\": \"<string>\",\n      \"dir\": \"<string>\"\n    },\n    {\n      \"field\": \"<string>\",\n      \"dir\": \"<string>\"\n    }\n  ],\n  \"filter\": {\n    \"field\": \"<string>\",\n    \"operator\": \"<string>\",\n    \"value\": \"<string>\",\n    \"logic\": \"<string>\",\n    \"filters\": [\n      {\n        \"value\": \"<Circular reference to #/components/schemas/Filter detected>\"\n      },\n      {\n        \"value\": \"<Circular reference to #/components/schemas/Filter detected>\"\n      }\n    ]\n  }\n}",
+                          "options": {
+                            "raw": {
+                              "headerFamily": "json",
+                              "language": "json"
+                            }
+                          }
+                        },
+                        "url": {
+                          "raw": "{{baseUrl}}/api/Cities/Dynamic?PageIndex=<integer>&PageSize=<integer>",
+                          "host": ["{{baseUrl}}"],
+                          "path": ["api", "Cities", "Dynamic"],
+                          "query": [
+                            {
+                              "key": "PageIndex",
+                              "value": "<integer>"
+                            },
+                            {
+                              "key": "PageSize",
+                              "value": "<integer>"
+                            }
+                          ]
+                        }
+                      },
+                      "status": "OK",
+                      "code": 200,
+                      "_postman_previewlanguage": "text",
+                      "header": [],
+                      "cookie": [],
+                      "body": ""
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "/api/Cities",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "// Test for status success\r",
+                      "pm.test(\"Successful POST request\", function () {\r",
+                      "    pm.expect(pm.response.code).to.be.oneOf([201, 202]);\r",
+                      "});\r",
+                      "\r",
+                      "// Test for response time less than 200ms\r",
+                      "pm.test(\"Response time is less than 200ms\", function () {\r",
+                      "    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+                      "});\r",
+                      "\r",
+                      "// Test for Content-Type header\r",
+                      "pm.test(\"Content-Type is application/json; charset=utf-8\", function () {\r",
+                      "    pm.response.to.have.header(\"Content-Type\", \"application/json; charset=utf-8\");\r",
+                      "});\r",
+                      "\r",
+                      "// Parse the JSON response\r",
+                      "var jsonData = pm.response.json();\r",
+                      "\r",
+                      "// Test to check if the response contains the expected fields\r",
+                      "pm.test(\"Response contains city ID\", function () {\r",
+                      "    pm.expect(jsonData).to.have.property(\"id\");\r",
+                      "});\r",
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {}
+                  }
+                }
+              ],
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{bearerToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Ankara\",\n  \"roles\": [\n    \"<string>\",\n    \"<string>\"\n  ],\n  \"bypassCache\": \"<boolean>\",\n  \"cacheKey\": \"<string>\",\n  \"cacheGroupKey\": [\n    \"<string>\",\n    \"<string>\"\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "headerFamily": "json",
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/Cities",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "Cities"]
+                }
+              },
+              "response": [
+                {
+                  "name": "Success",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer <token>",
+                        "description": "Added as a part of security scheme: bearer"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"<string>\",\n  \"roles\": [\n    \"<string>\",\n    \"<string>\"\n  ],\n  \"bypassCache\": \"<boolean>\",\n  \"cacheKey\": \"<string>\",\n  \"cacheGroupKey\": [\n    \"<string>\",\n    \"<string>\"\n  ]\n}",
+                      "options": {
+                        "raw": {
+                          "headerFamily": "json",
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{baseUrl}}/api/Cities",
+                      "host": ["{{baseUrl}}"],
+                      "path": ["api", "Cities"]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "text",
+                  "header": [],
+                  "cookie": [],
+                  "body": ""
+                }
+              ]
+            },
+            {
+              "name": "/api/Cities",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{bearerToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"id\": \"<uuid>\",\n  \"name\": \"<string>\",\n  \"roles\": [\n    \"<string>\",\n    \"<string>\"\n  ],\n  \"bypassCache\": \"<boolean>\",\n  \"cacheKey\": \"<string>\",\n  \"cacheGroupKey\": [\n    \"<string>\",\n    \"<string>\"\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "headerFamily": "json",
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/Cities",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "Cities"]
+                }
+              },
+              "response": [
+                {
+                  "name": "Success",
+                  "originalRequest": {
+                    "method": "PUT",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer <token>",
+                        "description": "Added as a part of security scheme: bearer"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"id\": \"<uuid>\",\n  \"name\": \"<string>\",\n  \"roles\": [\n    \"<string>\",\n    \"<string>\"\n  ],\n  \"bypassCache\": \"<boolean>\",\n  \"cacheKey\": \"<string>\",\n  \"cacheGroupKey\": [\n    \"<string>\",\n    \"<string>\"\n  ]\n}",
+                      "options": {
+                        "raw": {
+                          "headerFamily": "json",
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{baseUrl}}/api/Cities",
+                      "host": ["{{baseUrl}}"],
+                      "path": ["api", "Cities"]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "text",
+                  "header": [],
+                  "cookie": [],
+                  "body": ""
+                }
+              ]
+            },
+            {
+              "name": "/api/Cities",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "//cityId değerini otomatik olarak kaydet\r",
+                      "var jsonData = pm.response.json();\r",
+                      "if (jsonData.items && jsonData.items.length > 0) {\r",
+                      "    var cityId = jsonData.items[0].id;\r",
+                      "    pm.environment.set(\"cityId\", cityId);\r",
+                      "}\r",
+                      "\r",
+                      "// Parse the JSON response\r",
+                      "var jsonData = pm.response.json();\r",
+                      "\r",
+                      "// Test for status code 200\r",
+                      "pm.test(\"Status code is 200\", function () {\r",
+                      "    pm.response.to.have.status(200);\r",
+                      "});\r",
+                      "\r",
+                      "// Test for response time less than 200ms\r",
+                      "pm.test(\"Response time is less than 200ms\", function () {\r",
+                      "    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+                      "});\r",
+                      "\r",
+                      "// Test for Content-Type header\r",
+                      "pm.test(\"Content-Type is application/json; charset=utf-8\", function () {\r",
+                      "    pm.response.to.have.header(\"Content-Type\", \"application/json; charset=utf-8\");\r",
+                      "});\r",
+                      "\r",
+                      "// Check if the response has items\r",
+                      "pm.test(\"Response has items\", function () {\r",
+                      "    pm.expect(jsonData.items).to.be.an('array').that.is.not.empty;\r",
+                      "});\r",
+                      "\r",
+                      "// Check the structure of the first item\r",
+                      "pm.test(\"First item has required properties\", function () {\r",
+                      "    if (jsonData.items.length > 0) {\r",
+                      "        var firstItem = jsonData.items[0];\r",
+                      "        pm.expect(firstItem).to.have.property('id');\r",
+                      "        pm.expect(firstItem).to.have.property('name');\r",
+                      "    }\r",
+                      "});\r",
+                      "\r",
+                      "// Store the cityId of the first item\r",
+                      "if (jsonData.items && jsonData.items.length > 0) {\r",
+                      "    var cityId = jsonData.items[0].id;\r",
+                      "    pm.environment.set(\"cityId\", cityId);\r",
+                      "}\r",
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {}
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": ["console.clear();"],
+                    "type": "text/javascript",
+                    "packages": {}
+                  }
+                }
+              ],
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{bearerToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/Cities?PageIndex=0&PageSize=5",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "Cities"],
+                  "query": [
+                    {
+                      "key": "PageIndex",
+                      "value": "0"
+                    },
+                    {
+                      "key": "PageSize",
+                      "value": "5"
+                    }
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "Success",
+                  "originalRequest": {
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer <token>",
+                        "description": "Added as a part of security scheme: bearer"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/Cities?PageIndex=<integer>&PageSize=<integer>",
+                      "host": ["{{baseUrl}}"],
+                      "path": ["api", "Cities"],
+                      "query": [
+                        {
+                          "key": "PageIndex",
+                          "value": "<integer>"
+                        },
+                        {
+                          "key": "PageSize",
+                          "value": "<integer>"
+                        }
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "text",
+                  "header": [],
+                  "cookie": [],
+                  "body": ""
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Districts",
+          "item": [
+            {
+              "name": "{id}",
+              "item": [
+                {
+                  "name": "/api/Districts/:id",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{bearerToken}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "DELETE",
+                    "header": [],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/Districts/:id",
+                      "host": ["{{baseUrl}}"],
+                      "path": ["api", "Districts", ":id"],
+                      "variable": [
+                        {
+                          "key": "id",
+                          "value": "<uuid>",
+                          "description": "(Required) "
+                        }
+                      ]
+                    }
+                  },
+                  "response": [
+                    {
+                      "name": "Success",
+                      "originalRequest": {
+                        "method": "DELETE",
+                        "header": [
+                          {
+                            "key": "Authorization",
+                            "value": "Bearer <token>",
+                            "description": "Added as a part of security scheme: bearer"
+                          }
+                        ],
+                        "url": {
+                          "raw": "{{baseUrl}}/api/Districts/:id",
+                          "host": ["{{baseUrl}}"],
+                          "path": ["api", "Districts", ":id"],
+                          "variable": [
+                            {
+                              "key": "id"
+                            }
+                          ]
+                        }
+                      },
+                      "status": "OK",
+                      "code": 200,
+                      "_postman_previewlanguage": "text",
+                      "header": [],
+                      "cookie": [],
+                      "body": ""
+                    }
+                  ]
+                },
+                {
+                  "name": "/api/Districts/:id",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{bearerToken}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/Districts/:id",
+                      "host": ["{{baseUrl}}"],
+                      "path": ["api", "Districts", ":id"],
+                      "variable": [
+                        {
+                          "key": "id",
+                          "value": "<uuid>",
+                          "description": "(Required) "
+                        }
+                      ]
+                    }
+                  },
+                  "response": [
+                    {
+                      "name": "Success",
+                      "originalRequest": {
+                        "method": "GET",
+                        "header": [
+                          {
+                            "key": "Authorization",
+                            "value": "Bearer <token>",
+                            "description": "Added as a part of security scheme: bearer"
+                          }
+                        ],
+                        "url": {
+                          "raw": "{{baseUrl}}/api/Districts/:id",
+                          "host": ["{{baseUrl}}"],
+                          "path": ["api", "Districts", ":id"],
+                          "variable": [
+                            {
+                              "key": "id"
+                            }
+                          ]
+                        }
+                      },
+                      "status": "OK",
+                      "code": 200,
+                      "_postman_previewlanguage": "text",
+                      "header": [],
+                      "cookie": [],
+                      "body": ""
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "Dynamic",
+              "item": [
+                {
+                  "name": "/api/Districts/Dynamic",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{bearerToken}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"sort\": [\n    {\n      \"field\": \"<string>\",\n      \"dir\": \"<string>\"\n    },\n    {\n      \"field\": \"<string>\",\n      \"dir\": \"<string>\"\n    }\n  ],\n  \"filter\": {\n    \"field\": \"<string>\",\n    \"operator\": \"<string>\",\n    \"value\": \"<string>\",\n    \"logic\": \"<string>\",\n    \"filters\": [\n      {\n        \"value\": \"<Circular reference to #/components/schemas/Filter detected>\"\n      },\n      {\n        \"value\": \"<Circular reference to #/components/schemas/Filter detected>\"\n      }\n    ]\n  }\n}",
+                      "options": {
+                        "raw": {
+                          "headerFamily": "json",
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{baseUrl}}/api/Districts/Dynamic?PageIndex=<integer>&PageSize=<integer>",
+                      "host": ["{{baseUrl}}"],
+                      "path": ["api", "Districts", "Dynamic"],
+                      "query": [
+                        {
+                          "key": "PageIndex",
+                          "value": "<integer>"
+                        },
+                        {
+                          "key": "PageSize",
+                          "value": "<integer>"
+                        }
+                      ]
+                    }
+                  },
+                  "response": [
+                    {
+                      "name": "Success",
+                      "originalRequest": {
+                        "method": "POST",
+                        "header": [
+                          {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                          },
+                          {
+                            "key": "Authorization",
+                            "value": "Bearer <token>",
+                            "description": "Added as a part of security scheme: bearer"
+                          }
+                        ],
+                        "body": {
+                          "mode": "raw",
+                          "raw": "{\n  \"sort\": [\n    {\n      \"field\": \"<string>\",\n      \"dir\": \"<string>\"\n    },\n    {\n      \"field\": \"<string>\",\n      \"dir\": \"<string>\"\n    }\n  ],\n  \"filter\": {\n    \"field\": \"<string>\",\n    \"operator\": \"<string>\",\n    \"value\": \"<string>\",\n    \"logic\": \"<string>\",\n    \"filters\": [\n      {\n        \"value\": \"<Circular reference to #/components/schemas/Filter detected>\"\n      },\n      {\n        \"value\": \"<Circular reference to #/components/schemas/Filter detected>\"\n      }\n    ]\n  }\n}",
+                          "options": {
+                            "raw": {
+                              "headerFamily": "json",
+                              "language": "json"
+                            }
+                          }
+                        },
+                        "url": {
+                          "raw": "{{baseUrl}}/api/Districts/Dynamic?PageIndex=<integer>&PageSize=<integer>",
+                          "host": ["{{baseUrl}}"],
+                          "path": ["api", "Districts", "Dynamic"],
+                          "query": [
+                            {
+                              "key": "PageIndex",
+                              "value": "<integer>"
+                            },
+                            {
+                              "key": "PageSize",
+                              "value": "<integer>"
+                            }
+                          ]
+                        }
+                      },
+                      "status": "OK",
+                      "code": 200,
+                      "_postman_previewlanguage": "text",
+                      "header": [],
+                      "cookie": [],
+                      "body": ""
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "/api/Districts",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "// Test for status success\r",
+                      "pm.test(\"Successful POST request\", function () {\r",
+                      "    pm.expect(pm.response.code).to.be.oneOf([201, 202]);\r",
+                      "});\r",
+                      "\r",
+                      "// Test for response time less than 200ms\r",
+                      "pm.test(\"Response time is less than 200ms\", function () {\r",
+                      "    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+                      "});\r",
+                      "\r",
+                      "// Test for Content-Type header\r",
+                      "pm.test(\"Content-Type is application/json; charset=utf-8\", function () {\r",
+                      "    pm.response.to.have.header(\"Content-Type\", \"application/json; charset=utf-8\");\r",
+                      "});\r",
+                      "\r",
+                      "// Parse the JSON response\r",
+                      "var jsonData = pm.response.json();\r",
+                      "\r",
+                      "// Test to check if the response contains the expected fields\r",
+                      "pm.test(\"Response contains district ID\", function () {\r",
+                      "    pm.expect(jsonData).to.have.property(\"id\");\r",
+                      "});\r",
+                      "\r",
+                      "pm.test(\"Response contains correct district name\", function () {\r",
+                      "    var districtRequestBody = JSON.parse(pm.environment.get(\"districtRequestBody\")); // Parse the JSON string\r",
+                      "    pm.expect(jsonData.name).to.eql(districtRequestBody.name); // Access the name property\r",
+                      "});\r",
+                      "\r",
+                      "pm.test(\"Response contains correct city ID\", function () {\r",
+                      "    pm.expect(jsonData.cityId).to.eql(pm.environment.get(\"cityId\"));\r",
+                      "});\r",
+                      "\r",
+                      "// Set the district ID in the environment for future requests\r",
+                      "pm.environment.set(\"districtId\", jsonData.id);\r",
+                      "\r",
+                      "// Log the response for debugging\r",
+                      "console.log(\"Response Body:\", jsonData);"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {}
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "console.clear();\r",
+                      "\r",
+                      "// Rastgele bir string oluşturma fonksiyonu\r",
+                      "function generateRandomString(length) {\r",
+                      "    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';\r",
+                      "    let result = '';\r",
+                      "    for (let i = 0; i < length; i++) {\r",
+                      "        result += characters.charAt(Math.floor(Math.random() * characters.length));\r",
+                      "    }\r",
+                      "    return result;\r",
+                      "}\r",
+                      "\r",
+                      "// Rastgele ilçe seçme fonksiyonu\r",
+                      "const turkishDistrictPrefixes = [\"Akyurt\", \"Altındağ\", \"Ayaş\", \"Balâ\", \"Beypazarı\",\"Çankaya\", \"Elmadağ\", \"Etimesgut\",\"Gölbaşı\", \"Haymana\", \"Kalecik\", \"Polatlı\"];\r",
+                      "\r",
+                      "function generateRandomDistrictName() {\r",
+                      "    const prefix = turkishDistrictPrefixes[Math.floor(Math.random() * turkishDistrictPrefixes.length)];\r",
+                      "    return `${prefix}`;\r",
+                      "}\r",
+                      "\r",
+                      "const name = generateRandomDistrictName();\r",
+                      "const cityId = pm.environment.get(\"cityId\"); //Şehir id'yi get isteğinden alma\r",
+                      "const roles = [generateRandomString(5), generateRandomString(5)];\r",
+                      "const bypassCache = Math.random() < 0.5;\r",
+                      "const cacheKey = generateRandomString(10);\r",
+                      "const cacheGroupKey = [generateRandomString(10), generateRandomString(10)];\r",
+                      "\r",
+                      "const requestBody = {\r",
+                      "    name: name,\r",
+                      "    cityId: cityId,\r",
+                      "    roles: roles,\r",
+                      "    bypassCache: bypassCache,\r",
+                      "    cacheKey: cacheKey,\r",
+                      "    cacheGroupKey: cacheGroupKey\r",
+                      "};\r",
+                      "\r",
+                      "pm.environment.set(\"districtRequestBody\", JSON.stringify(requestBody));"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {}
+                  }
+                }
+              ],
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{bearerToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{{districtRequestBody}}\n// {\n//   \"name\": \"<string>\",\n//   \"cityId\": \"<uuid>\",\n//   \"roles\": [\n//     \"<string>\",\n//     \"<string>\"\n//   ],\n//   \"bypassCache\": \"<boolean>\",\n//   \"cacheKey\": \"<string>\",\n//   \"cacheGroupKey\": [\n//     \"<string>\",\n//     \"<string>\"\n//   ]\n// }",
+                  "options": {
+                    "raw": {
+                      "headerFamily": "json",
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/Districts",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "Districts"]
+                }
+              },
+              "response": [
+                {
+                  "name": "Success",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer <token>",
+                        "description": "Added as a part of security scheme: bearer"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"<string>\",\n  \"cityId\": \"<uuid>\",\n  \"roles\": [\n    \"<string>\",\n    \"<string>\"\n  ],\n  \"bypassCache\": \"<boolean>\",\n  \"cacheKey\": \"<string>\",\n  \"cacheGroupKey\": [\n    \"<string>\",\n    \"<string>\"\n  ]\n}",
+                      "options": {
+                        "raw": {
+                          "headerFamily": "json",
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{baseUrl}}/api/Districts",
+                      "host": ["{{baseUrl}}"],
+                      "path": ["api", "Districts"]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "text",
+                  "header": [],
+                  "cookie": [],
+                  "body": ""
+                }
+              ]
+            },
+            {
+              "name": "/api/Districts",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{bearerToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"id\": \"<uuid>\",\n  \"name\": \"<string>\",\n  \"cityId\": \"<uuid>\",\n  \"roles\": [\n    \"<string>\",\n    \"<string>\"\n  ],\n  \"bypassCache\": \"<boolean>\",\n  \"cacheKey\": \"<string>\",\n  \"cacheGroupKey\": [\n    \"<string>\",\n    \"<string>\"\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "headerFamily": "json",
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/Districts",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "Districts"]
+                }
+              },
+              "response": [
+                {
+                  "name": "Success",
+                  "originalRequest": {
+                    "method": "PUT",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer <token>",
+                        "description": "Added as a part of security scheme: bearer"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"id\": \"<uuid>\",\n  \"name\": \"<string>\",\n  \"cityId\": \"<uuid>\",\n  \"roles\": [\n    \"<string>\",\n    \"<string>\"\n  ],\n  \"bypassCache\": \"<boolean>\",\n  \"cacheKey\": \"<string>\",\n  \"cacheGroupKey\": [\n    \"<string>\",\n    \"<string>\"\n  ]\n}",
+                      "options": {
+                        "raw": {
+                          "headerFamily": "json",
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{baseUrl}}/api/Districts",
+                      "host": ["{{baseUrl}}"],
+                      "path": ["api", "Districts"]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "text",
+                  "header": [],
+                  "cookie": [],
+                  "body": ""
+                }
+              ]
+            },
+            {
+              "name": "/api/Districts",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "//districtId değerini otomatik olarak kaydet\r",
+                      "var jsonData = pm.response.json();\r",
+                      "if (jsonData.items && jsonData.items.length > 0) {\r",
+                      "    var districtId = jsonData.items[0].id;\r",
+                      "    pm.environment.set(\"districtId\", districtId);\r",
+                      "}\r",
+                      "\r",
+                      "// Parse the JSON response\r",
+                      "var jsonData = pm.response.json();\r",
+                      "\r",
+                      "// Test for status code 200\r",
+                      "pm.test(\"Status code is 200\", function () {\r",
+                      "    pm.response.to.have.status(200);\r",
+                      "});\r",
+                      "\r",
+                      "// Test for response time less than 200ms\r",
+                      "pm.test(\"Response time is less than 200ms\", function () {\r",
+                      "    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+                      "});\r",
+                      "\r",
+                      "// Test for Content-Type header\r",
+                      "pm.test(\"Content-Type is application/json; charset=utf-8\", function () {\r",
+                      "    pm.response.to.have.header(\"Content-Type\", \"application/json; charset=utf-8\");\r",
+                      "});\r",
+                      "\r",
+                      "// Check if the response has items\r",
+                      "pm.test(\"Response has items\", function () {\r",
+                      "    pm.expect(jsonData.items).to.be.an('array').that.is.not.empty;\r",
+                      "});\r",
+                      "\r",
+                      "// Check the structure of the first item\r",
+                      "pm.test(\"First item has required properties\", function () {\r",
+                      "    if (jsonData.items.length > 0) {\r",
+                      "        var firstItem = jsonData.items[0];\r",
+                      "        pm.expect(firstItem).to.have.property('id');\r",
+                      "        pm.expect(firstItem).to.have.property('name');\r",
+                      "        pm.expect(firstItem).to.have.property('cityId');\r",
+                      "    }\r",
+                      "});"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {}
+                  }
+                }
+              ],
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{bearerToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/Districts?PageIndex=0&PageSize=5",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "Districts"],
+                  "query": [
+                    {
+                      "key": "PageIndex",
+                      "value": "0"
+                    },
+                    {
+                      "key": "PageSize",
+                      "value": "5"
+                    }
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "Success",
+                  "originalRequest": {
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer <token>",
+                        "description": "Added as a part of security scheme: bearer"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/Districts?PageIndex=<integer>&PageSize=<integer>",
+                      "host": ["{{baseUrl}}"],
+                      "path": ["api", "Districts"],
+                      "query": [
+                        {
+                          "key": "PageIndex",
+                          "value": "<integer>"
+                        },
+                        {
+                          "key": "PageSize",
+                          "value": "<integer>"
+                        }
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "text",
+                  "header": [],
+                  "cookie": [],
+                  "body": ""
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Neighborhoods",
+          "item": [
+            {
+              "name": "{id}",
+              "item": [
+                {
+                  "name": "/api/Neighborhoods/:id",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{bearerToken}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "DELETE",
+                    "header": [],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/Neighborhoods/:id",
+                      "host": ["{{baseUrl}}"],
+                      "path": ["api", "Neighborhoods", ":id"],
+                      "variable": [
+                        {
+                          "key": "id",
+                          "value": "<uuid>",
+                          "description": "(Required) "
+                        }
+                      ]
+                    }
+                  },
+                  "response": [
+                    {
+                      "name": "Success",
+                      "originalRequest": {
+                        "method": "DELETE",
+                        "header": [
+                          {
+                            "key": "Authorization",
+                            "value": "Bearer <token>",
+                            "description": "Added as a part of security scheme: bearer"
+                          }
+                        ],
+                        "url": {
+                          "raw": "{{baseUrl}}/api/Neighborhoods/:id",
+                          "host": ["{{baseUrl}}"],
+                          "path": ["api", "Neighborhoods", ":id"],
+                          "variable": [
+                            {
+                              "key": "id"
+                            }
+                          ]
+                        }
+                      },
+                      "status": "OK",
+                      "code": 200,
+                      "_postman_previewlanguage": "text",
+                      "header": [],
+                      "cookie": [],
+                      "body": ""
+                    }
+                  ]
+                },
+                {
+                  "name": "/api/Neighborhoods/:id",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{bearerToken}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/Neighborhoods/:id",
+                      "host": ["{{baseUrl}}"],
+                      "path": ["api", "Neighborhoods", ":id"],
+                      "variable": [
+                        {
+                          "key": "id",
+                          "value": "<uuid>",
+                          "description": "(Required) "
+                        }
+                      ]
+                    }
+                  },
+                  "response": [
+                    {
+                      "name": "Success",
+                      "originalRequest": {
+                        "method": "GET",
+                        "header": [
+                          {
+                            "key": "Authorization",
+                            "value": "Bearer <token>",
+                            "description": "Added as a part of security scheme: bearer"
+                          }
+                        ],
+                        "url": {
+                          "raw": "{{baseUrl}}/api/Neighborhoods/:id",
+                          "host": ["{{baseUrl}}"],
+                          "path": ["api", "Neighborhoods", ":id"],
+                          "variable": [
+                            {
+                              "key": "id"
+                            }
+                          ]
+                        }
+                      },
+                      "status": "OK",
+                      "code": 200,
+                      "_postman_previewlanguage": "text",
+                      "header": [],
+                      "cookie": [],
+                      "body": ""
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "Dynamic",
+              "item": [
+                {
+                  "name": "/api/Neighborhoods/Dynamic",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{bearerToken}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"sort\": [\n    {\n      \"field\": \"<string>\",\n      \"dir\": \"<string>\"\n    },\n    {\n      \"field\": \"<string>\",\n      \"dir\": \"<string>\"\n    }\n  ],\n  \"filter\": {\n    \"field\": \"<string>\",\n    \"operator\": \"<string>\",\n    \"value\": \"<string>\",\n    \"logic\": \"<string>\",\n    \"filters\": [\n      {\n        \"value\": \"<Circular reference to #/components/schemas/Filter detected>\"\n      },\n      {\n        \"value\": \"<Circular reference to #/components/schemas/Filter detected>\"\n      }\n    ]\n  }\n}",
+                      "options": {
+                        "raw": {
+                          "headerFamily": "json",
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{baseUrl}}/api/Neighborhoods/Dynamic?PageIndex=<integer>&PageSize=<integer>",
+                      "host": ["{{baseUrl}}"],
+                      "path": ["api", "Neighborhoods", "Dynamic"],
+                      "query": [
+                        {
+                          "key": "PageIndex",
+                          "value": "<integer>"
+                        },
+                        {
+                          "key": "PageSize",
+                          "value": "<integer>"
+                        }
+                      ]
+                    }
+                  },
+                  "response": [
+                    {
+                      "name": "Success",
+                      "originalRequest": {
+                        "method": "POST",
+                        "header": [
+                          {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                          },
+                          {
+                            "key": "Authorization",
+                            "value": "Bearer <token>",
+                            "description": "Added as a part of security scheme: bearer"
+                          }
+                        ],
+                        "body": {
+                          "mode": "raw",
+                          "raw": "{\n  \"sort\": [\n    {\n      \"field\": \"<string>\",\n      \"dir\": \"<string>\"\n    },\n    {\n      \"field\": \"<string>\",\n      \"dir\": \"<string>\"\n    }\n  ],\n  \"filter\": {\n    \"field\": \"<string>\",\n    \"operator\": \"<string>\",\n    \"value\": \"<string>\",\n    \"logic\": \"<string>\",\n    \"filters\": [\n      {\n        \"value\": \"<Circular reference to #/components/schemas/Filter detected>\"\n      },\n      {\n        \"value\": \"<Circular reference to #/components/schemas/Filter detected>\"\n      }\n    ]\n  }\n}",
+                          "options": {
+                            "raw": {
+                              "headerFamily": "json",
+                              "language": "json"
+                            }
+                          }
+                        },
+                        "url": {
+                          "raw": "{{baseUrl}}/api/Neighborhoods/Dynamic?PageIndex=<integer>&PageSize=<integer>",
+                          "host": ["{{baseUrl}}"],
+                          "path": ["api", "Neighborhoods", "Dynamic"],
+                          "query": [
+                            {
+                              "key": "PageIndex",
+                              "value": "<integer>"
+                            },
+                            {
+                              "key": "PageSize",
+                              "value": "<integer>"
+                            }
+                          ]
+                        }
+                      },
+                      "status": "OK",
+                      "code": 200,
+                      "_postman_previewlanguage": "text",
+                      "header": [],
+                      "cookie": [],
+                      "body": ""
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "/api/Neighborhoods",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "console.clear();\r",
+                      "\r",
+                      "// Rastgele bir string oluşturma fonksiyonu\r",
+                      "function generateRandomString(length) {\r",
+                      "    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';\r",
+                      "    let result = '';\r",
+                      "    for (let i = 0; i < length; i++) {\r",
+                      "        result += characters.charAt(Math.floor(Math.random() * characters.length));\r",
+                      "    }\r",
+                      "    return result;\r",
+                      "}\r",
+                      "const neighborhoodNames = [\"Mahalle1\", \"Mahalle2\", \"Mahalle3\", \"Mahalle4\", \"Mahalle5\"];\r",
+                      "function generateRandomNeighbourhoodName() {\r",
+                      "    const prefix = neighborhoodNames[Math.floor(Math.random() * neighborhoodNames.length)];\r",
+                      "    return `${prefix}`;\r",
+                      "}\r",
+                      "\r",
+                      "const name = generateRandomNeighbourhoodName();\r",
+                      "const districtId = pm.environment.get(\"districtId\"); //İlçe id'yi get isteğinden alma\r",
+                      "const roles = [generateRandomString(5), generateRandomString(5)];\r",
+                      "const bypassCache = Math.random() < 0.5;\r",
+                      "const cacheKey = generateRandomString(10);\r",
+                      "const cacheGroupKey = [generateRandomString(10), generateRandomString(10)];\r",
+                      "\r",
+                      "const requestBody = {\r",
+                      "    name: name,\r",
+                      "    districtId: districtId,\r",
+                      "    roles: roles,\r",
+                      "    bypassCache: bypassCache,\r",
+                      "    cacheKey: cacheKey,\r",
+                      "    cacheGroupKey: cacheGroupKey\r",
+                      "};\r",
+                      "\r",
+                      "pm.environment.set(\"neighborhoodRequestBody\", JSON.stringify(requestBody));"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {}
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "// Test for status success\r",
+                      "pm.test(\"Successful POST request\", function () {\r",
+                      "    pm.expect(pm.response.code).to.be.oneOf([201, 202]);\r",
+                      "});\r",
+                      "\r",
+                      "// Test for response time less than 200ms\r",
+                      "pm.test(\"Response time is less than 200ms\", function () {\r",
+                      "    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+                      "});\r",
+                      "\r",
+                      "// Test for Content-Type header\r",
+                      "pm.test(\"Content-Type is application/json; charset=utf-8\", function () {\r",
+                      "    pm.response.to.have.header(\"Content-Type\", \"application/json; charset=utf-8\");\r",
+                      "});\r",
+                      "\r",
+                      "// Parse the JSON response\r",
+                      "var jsonData = pm.response.json();\r",
+                      "\r",
+                      "// Test to check if the response contains the expected fields\r",
+                      "pm.test(\"Response contains neighborhood ID\", function () {\r",
+                      "    pm.expect(jsonData).to.have.property(\"id\");\r",
+                      "});\r",
+                      "\r",
+                      "pm.test(\"Response contains correct neighborhood name\", function () {\r",
+                      "    var neighborhoodRequestBody = JSON.parse(pm.environment.get(\"neighborhoodRequestBody\")); // Parse the JSON string\r",
+                      "    pm.expect(jsonData.name).to.eql(neighborhoodRequestBody.name); // Access the name property\r",
+                      "});\r",
+                      "\r",
+                      "pm.test(\"Response contains correct district ID\", function () {\r",
+                      "    pm.expect(jsonData.districtId).to.eql(pm.environment.get(\"districtId\"));\r",
+                      "});\r",
+                      "\r",
+                      "// Set the neighborhood ID in the environment for future requests\r",
+                      "pm.environment.set(\"neighborhoodId\", jsonData.id);\r",
+                      "\r",
+                      "// Log the response for debugging\r",
+                      "console.log(\"Response Body:\", jsonData);"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {}
+                  }
+                }
+              ],
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{bearerToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{{neighborhoodRequestBody}}\n// {\n//   \"name\": \"<string>\",\n//   \"districtId\": \"<uuid>\",\n//   \"roles\": [\n//     \"<string>\",\n//     \"<string>\"\n//   ],\n//   \"bypassCache\": \"<boolean>\",\n//   \"cacheKey\": \"<string>\",\n//   \"cacheGroupKey\": [\n//     \"<string>\",\n//     \"<string>\"\n//   ]\n// }",
+                  "options": {
+                    "raw": {
+                      "headerFamily": "json",
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/Neighborhoods",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "Neighborhoods"]
+                }
+              },
+              "response": [
+                {
+                  "name": "Success",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer <token>",
+                        "description": "Added as a part of security scheme: bearer"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"<string>\",\n  \"districtId\": \"<uuid>\",\n  \"roles\": [\n    \"<string>\",\n    \"<string>\"\n  ],\n  \"bypassCache\": \"<boolean>\",\n  \"cacheKey\": \"<string>\",\n  \"cacheGroupKey\": [\n    \"<string>\",\n    \"<string>\"\n  ]\n}",
+                      "options": {
+                        "raw": {
+                          "headerFamily": "json",
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{baseUrl}}/api/Neighborhoods",
+                      "host": ["{{baseUrl}}"],
+                      "path": ["api", "Neighborhoods"]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "text",
+                  "header": [],
+                  "cookie": [],
+                  "body": ""
+                }
+              ]
+            },
+            {
+              "name": "/api/Neighborhoods",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{bearerToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"id\": \"<uuid>\",\n  \"name\": \"<string>\",\n  \"districtId\": \"<uuid>\",\n  \"roles\": [\n    \"<string>\",\n    \"<string>\"\n  ],\n  \"bypassCache\": \"<boolean>\",\n  \"cacheKey\": \"<string>\",\n  \"cacheGroupKey\": [\n    \"<string>\",\n    \"<string>\"\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "headerFamily": "json",
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/Neighborhoods",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "Neighborhoods"]
+                }
+              },
+              "response": [
+                {
+                  "name": "Success",
+                  "originalRequest": {
+                    "method": "PUT",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer <token>",
+                        "description": "Added as a part of security scheme: bearer"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"id\": \"<uuid>\",\n  \"name\": \"<string>\",\n  \"districtId\": \"<uuid>\",\n  \"roles\": [\n    \"<string>\",\n    \"<string>\"\n  ],\n  \"bypassCache\": \"<boolean>\",\n  \"cacheKey\": \"<string>\",\n  \"cacheGroupKey\": [\n    \"<string>\",\n    \"<string>\"\n  ]\n}",
+                      "options": {
+                        "raw": {
+                          "headerFamily": "json",
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{baseUrl}}/api/Neighborhoods",
+                      "host": ["{{baseUrl}}"],
+                      "path": ["api", "Neighborhoods"]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "text",
+                  "header": [],
+                  "cookie": [],
+                  "body": ""
+                }
+              ]
+            },
+            {
+              "name": "/api/Neighborhoods",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "//neighborhoodId değerini otomatik olarak kaydet\r",
+                      "var jsonData = pm.response.json();\r",
+                      "if (jsonData.items && jsonData.items.length > 0) {\r",
+                      "    var neighborhoodId = jsonData.items[0].id;\r",
+                      "    pm.environment.set(\"neighborhoodId\", neighborhoodId);\r",
+                      "}\r",
+                      "\r",
+                      "// Parse the JSON response\r",
+                      "var jsonData = pm.response.json();\r",
+                      "\r",
+                      "// Test for status code 200\r",
+                      "pm.test(\"Status code is 200\", function () {\r",
+                      "    pm.response.to.have.status(200);\r",
+                      "});\r",
+                      "\r",
+                      "// Test for response time less than 200ms\r",
+                      "pm.test(\"Response time is less than 200ms\", function () {\r",
+                      "    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+                      "});\r",
+                      "\r",
+                      "// Test for Content-Type header\r",
+                      "pm.test(\"Content-Type is application/json; charset=utf-8\", function () {\r",
+                      "    pm.response.to.have.header(\"Content-Type\", \"application/json; charset=utf-8\");\r",
+                      "});\r",
+                      "\r",
+                      "// Check if the response has items\r",
+                      "pm.test(\"Response has items\", function () {\r",
+                      "    pm.expect(jsonData.items).to.be.an('array').that.is.not.empty;\r",
+                      "});\r",
+                      "\r",
+                      "// Check the structure of the first item\r",
+                      "pm.test(\"First item has required properties\", function () {\r",
+                      "    if (jsonData.items.length > 0) {\r",
+                      "        var firstItem = jsonData.items[0];\r",
+                      "        pm.expect(firstItem).to.have.property('id');\r",
+                      "        pm.expect(firstItem).to.have.property('name');\r",
+                      "        pm.expect(firstItem).to.have.property('districtId');\r",
+                      "    }\r",
+                      "});\r",
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {}
+                  }
+                }
+              ],
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{bearerToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/Neighborhoods?PageIndex=0&PageSize=5",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "Neighborhoods"],
+                  "query": [
+                    {
+                      "key": "PageIndex",
+                      "value": "0"
+                    },
+                    {
+                      "key": "PageSize",
+                      "value": "5"
+                    }
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "Success",
+                  "originalRequest": {
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer <token>",
+                        "description": "Added as a part of security scheme: bearer"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/Neighborhoods?PageIndex=<integer>&PageSize=<integer>",
+                      "host": ["{{baseUrl}}"],
+                      "path": ["api", "Neighborhoods"],
+                      "query": [
+                        {
+                          "key": "PageIndex",
+                          "value": "<integer>"
+                        },
+                        {
+                          "key": "PageSize",
+                          "value": "<integer>"
+                        }
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "text",
+                  "header": [],
+                  "cookie": [],
+                  "body": ""
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Streets",
+          "item": [
+            {
+              "name": "{id}",
+              "item": [
+                {
+                  "name": "/api/Streets/:id",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{bearerToken}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "DELETE",
+                    "header": [],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/Streets/:id",
+                      "host": ["{{baseUrl}}"],
+                      "path": ["api", "Streets", ":id"],
+                      "variable": [
+                        {
+                          "key": "id",
+                          "value": "<uuid>",
+                          "description": "(Required) "
+                        }
+                      ]
+                    }
+                  },
+                  "response": [
+                    {
+                      "name": "Success",
+                      "originalRequest": {
+                        "method": "DELETE",
+                        "header": [
+                          {
+                            "key": "Authorization",
+                            "value": "Bearer <token>",
+                            "description": "Added as a part of security scheme: bearer"
+                          }
+                        ],
+                        "url": {
+                          "raw": "{{baseUrl}}/api/Streets/:id",
+                          "host": ["{{baseUrl}}"],
+                          "path": ["api", "Streets", ":id"],
+                          "variable": [
+                            {
+                              "key": "id"
+                            }
+                          ]
+                        }
+                      },
+                      "status": "OK",
+                      "code": 200,
+                      "_postman_previewlanguage": "text",
+                      "header": [],
+                      "cookie": [],
+                      "body": ""
+                    }
+                  ]
+                },
+                {
+                  "name": "/api/Streets/:id",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{bearerToken}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/Streets/:id",
+                      "host": ["{{baseUrl}}"],
+                      "path": ["api", "Streets", ":id"],
+                      "variable": [
+                        {
+                          "key": "id",
+                          "value": "<uuid>",
+                          "description": "(Required) "
+                        }
+                      ]
+                    }
+                  },
+                  "response": [
+                    {
+                      "name": "Success",
+                      "originalRequest": {
+                        "method": "GET",
+                        "header": [
+                          {
+                            "key": "Authorization",
+                            "value": "Bearer <token>",
+                            "description": "Added as a part of security scheme: bearer"
+                          }
+                        ],
+                        "url": {
+                          "raw": "{{baseUrl}}/api/Streets/:id",
+                          "host": ["{{baseUrl}}"],
+                          "path": ["api", "Streets", ":id"],
+                          "variable": [
+                            {
+                              "key": "id"
+                            }
+                          ]
+                        }
+                      },
+                      "status": "OK",
+                      "code": 200,
+                      "_postman_previewlanguage": "text",
+                      "header": [],
+                      "cookie": [],
+                      "body": ""
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "Dynamic",
+              "item": [
+                {
+                  "name": "/api/Streets/Dynamic",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{bearerToken}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"sort\": [\n    {\n      \"field\": \"<string>\",\n      \"dir\": \"<string>\"\n    },\n    {\n      \"field\": \"<string>\",\n      \"dir\": \"<string>\"\n    }\n  ],\n  \"filter\": {\n    \"field\": \"<string>\",\n    \"operator\": \"<string>\",\n    \"value\": \"<string>\",\n    \"logic\": \"<string>\",\n    \"filters\": [\n      {\n        \"value\": \"<Circular reference to #/components/schemas/Filter detected>\"\n      },\n      {\n        \"value\": \"<Circular reference to #/components/schemas/Filter detected>\"\n      }\n    ]\n  }\n}",
+                      "options": {
+                        "raw": {
+                          "headerFamily": "json",
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{baseUrl}}/api/Streets/Dynamic?PageIndex=<integer>&PageSize=<integer>",
+                      "host": ["{{baseUrl}}"],
+                      "path": ["api", "Streets", "Dynamic"],
+                      "query": [
+                        {
+                          "key": "PageIndex",
+                          "value": "<integer>"
+                        },
+                        {
+                          "key": "PageSize",
+                          "value": "<integer>"
+                        }
+                      ]
+                    }
+                  },
+                  "response": [
+                    {
+                      "name": "Success",
+                      "originalRequest": {
+                        "method": "POST",
+                        "header": [
+                          {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                          },
+                          {
+                            "key": "Authorization",
+                            "value": "Bearer <token>",
+                            "description": "Added as a part of security scheme: bearer"
+                          }
+                        ],
+                        "body": {
+                          "mode": "raw",
+                          "raw": "{\n  \"sort\": [\n    {\n      \"field\": \"<string>\",\n      \"dir\": \"<string>\"\n    },\n    {\n      \"field\": \"<string>\",\n      \"dir\": \"<string>\"\n    }\n  ],\n  \"filter\": {\n    \"field\": \"<string>\",\n    \"operator\": \"<string>\",\n    \"value\": \"<string>\",\n    \"logic\": \"<string>\",\n    \"filters\": [\n      {\n        \"value\": \"<Circular reference to #/components/schemas/Filter detected>\"\n      },\n      {\n        \"value\": \"<Circular reference to #/components/schemas/Filter detected>\"\n      }\n    ]\n  }\n}",
+                          "options": {
+                            "raw": {
+                              "headerFamily": "json",
+                              "language": "json"
+                            }
+                          }
+                        },
+                        "url": {
+                          "raw": "{{baseUrl}}/api/Streets/Dynamic?PageIndex=<integer>&PageSize=<integer>",
+                          "host": ["{{baseUrl}}"],
+                          "path": ["api", "Streets", "Dynamic"],
+                          "query": [
+                            {
+                              "key": "PageIndex",
+                              "value": "<integer>"
+                            },
+                            {
+                              "key": "PageSize",
+                              "value": "<integer>"
+                            }
+                          ]
+                        }
+                      },
+                      "status": "OK",
+                      "code": 200,
+                      "_postman_previewlanguage": "text",
+                      "header": [],
+                      "cookie": [],
+                      "body": ""
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "/api/Streets",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "console.clear();\r",
+                      "\r",
+                      "// Rastgele bir string oluşturma fonksiyonu\r",
+                      "function generateRandomString(length) {\r",
+                      "    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';\r",
+                      "    let result = '';\r",
+                      "    for (let i = 0; i < length; i++) {\r",
+                      "        result += characters.charAt(Math.floor(Math.random() * characters.length));\r",
+                      "    }\r",
+                      "    return result;\r",
+                      "}\r",
+                      "\r",
+                      "const name = generateRandomString(7);\r",
+                      "const neighborhoodId = pm.environment.get(\"neighborhoodId\"); //Mahalle id'yi get'ten alma\r",
+                      "const roles = [generateRandomString(5), generateRandomString(5)];\r",
+                      "const bypassCache = Math.random() < 0.5;\r",
+                      "const cacheKey = generateRandomString(10);\r",
+                      "const cacheGroupKey = [generateRandomString(10), generateRandomString(10)];\r",
+                      "\r",
+                      "const requestBody = {\r",
+                      "    name: name,\r",
+                      "    neighborhoodId: neighborhoodId,\r",
+                      "    roles: roles,\r",
+                      "    bypassCache: bypassCache,\r",
+                      "    cacheKey: cacheKey,\r",
+                      "    cacheGroupKey: cacheGroupKey\r",
+                      "};\r",
+                      "\r",
+                      "pm.environment.set(\"streetRequestBody\", JSON.stringify(requestBody));"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {}
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "// Test for status success\r",
+                      "pm.test(\"Successful POST request\", function () {\r",
+                      "    pm.expect(pm.response.code).to.be.oneOf([201, 202]);\r",
+                      "});\r",
+                      "\r",
+                      "// Test for response time less than 200ms\r",
+                      "pm.test(\"Response time is less than 200ms\", function () {\r",
+                      "    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+                      "});\r",
+                      "\r",
+                      "// Test for Content-Type header\r",
+                      "pm.test(\"Content-Type is application/json; charset=utf-8\", function () {\r",
+                      "    pm.response.to.have.header(\"Content-Type\", \"application/json; charset=utf-8\");\r",
+                      "});\r",
+                      "\r",
+                      "// Parse the JSON response\r",
+                      "var jsonData = pm.response.json();\r",
+                      "\r",
+                      "// Test to check if the response contains the expected fields\r",
+                      "pm.test(\"Response contains street ID\", function () {\r",
+                      "    pm.expect(jsonData).to.have.property(\"id\");\r",
+                      "});\r",
+                      "\r",
+                      "pm.test(\"Response contains correct street name\", function () {\r",
+                      "    var streetRequestBody = JSON.parse(pm.environment.get(\"streetRequestBody\")); // Parse the JSON string\r",
+                      "    pm.expect(jsonData.name).to.eql(streetRequestBody.name); // Access the name property\r",
+                      "});\r",
+                      "\r",
+                      "pm.test(\"Response contains correct neighborhood ID\", function () {\r",
+                      "    pm.expect(jsonData.neighborhoodId).to.eql(pm.environment.get(\"neighborhoodId\"));\r",
+                      "});\r",
+                      "\r",
+                      "// Set the street ID in the environment for future requests\r",
+                      "pm.environment.set(\"streetId\", jsonData.id);\r",
+                      "\r",
+                      "// Log the response for debugging\r",
+                      "console.log(\"Response Body:\", jsonData);"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {}
+                  }
+                }
+              ],
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{bearerToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{{streetRequestBody}}\n\n// {\n//   \"name\": \"<string>\",\n//   \"neighborhoodId\": \"<uuid>\",\n//   \"roles\": [\n//     \"<string>\",\n//     \"<string>\"\n//   ],\n//   \"bypassCache\": \"<boolean>\",\n//   \"cacheKey\": \"<string>\",\n//   \"cacheGroupKey\": [\n//     \"<string>\",\n//     \"<string>\"\n//   ]\n// }",
+                  "options": {
+                    "raw": {
+                      "headerFamily": "json",
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/Streets",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "Streets"]
+                }
+              },
+              "response": [
+                {
+                  "name": "Success",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer <token>",
+                        "description": "Added as a part of security scheme: bearer"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"<string>\",\n  \"neighborhoodId\": \"<uuid>\",\n  \"roles\": [\n    \"<string>\",\n    \"<string>\"\n  ],\n  \"bypassCache\": \"<boolean>\",\n  \"cacheKey\": \"<string>\",\n  \"cacheGroupKey\": [\n    \"<string>\",\n    \"<string>\"\n  ]\n}",
+                      "options": {
+                        "raw": {
+                          "headerFamily": "json",
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{baseUrl}}/api/Streets",
+                      "host": ["{{baseUrl}}"],
+                      "path": ["api", "Streets"]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "text",
+                  "header": [],
+                  "cookie": [],
+                  "body": ""
+                }
+              ]
+            },
+            {
+              "name": "/api/Streets",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{bearerToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"id\": \"<uuid>\",\n  \"name\": \"<string>\",\n  \"neighborhoodId\": \"<uuid>\",\n  \"roles\": [\n    \"<string>\",\n    \"<string>\"\n  ],\n  \"bypassCache\": \"<boolean>\",\n  \"cacheKey\": \"<string>\",\n  \"cacheGroupKey\": [\n    \"<string>\",\n    \"<string>\"\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "headerFamily": "json",
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/Streets",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "Streets"]
+                }
+              },
+              "response": [
+                {
+                  "name": "Success",
+                  "originalRequest": {
+                    "method": "PUT",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer <token>",
+                        "description": "Added as a part of security scheme: bearer"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"id\": \"<uuid>\",\n  \"name\": \"<string>\",\n  \"neighborhoodId\": \"<uuid>\",\n  \"roles\": [\n    \"<string>\",\n    \"<string>\"\n  ],\n  \"bypassCache\": \"<boolean>\",\n  \"cacheKey\": \"<string>\",\n  \"cacheGroupKey\": [\n    \"<string>\",\n    \"<string>\"\n  ]\n}",
+                      "options": {
+                        "raw": {
+                          "headerFamily": "json",
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{baseUrl}}/api/Streets",
+                      "host": ["{{baseUrl}}"],
+                      "path": ["api", "Streets"]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "text",
+                  "header": [],
+                  "cookie": [],
+                  "body": ""
+                }
+              ]
+            },
+            {
+              "name": "/api/Streets",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "//streetId değerini otomatik olarak kaydet\r",
+                      "var jsonData = pm.response.json();\r",
+                      "if (jsonData.items && jsonData.items.length > 0) {\r",
+                      "    var streetId = jsonData.items[0].id;\r",
+                      "    pm.environment.set(\"streetId\", streetId);\r",
+                      "}\r",
+                      "\r",
+                      "// Parse the JSON response\r",
+                      "var jsonData = pm.response.json();\r",
+                      "\r",
+                      "// Test for status code 200\r",
+                      "pm.test(\"Status code is 200\", function () {\r",
+                      "    pm.response.to.have.status(200);\r",
+                      "});\r",
+                      "\r",
+                      "// Test for response time less than 200ms\r",
+                      "pm.test(\"Response time is less than 200ms\", function () {\r",
+                      "    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+                      "});\r",
+                      "\r",
+                      "// Test for Content-Type header\r",
+                      "pm.test(\"Content-Type is application/json; charset=utf-8\", function () {\r",
+                      "    pm.response.to.have.header(\"Content-Type\", \"application/json; charset=utf-8\");\r",
+                      "});\r",
+                      "\r",
+                      "// Check if the response has items\r",
+                      "pm.test(\"Response has items\", function () {\r",
+                      "    pm.expect(jsonData.items).to.be.an('array').that.is.not.empty;\r",
+                      "});\r",
+                      "\r",
+                      "// Check the structure of the first item\r",
+                      "pm.test(\"First item has required properties\", function () {\r",
+                      "    if (jsonData.items.length > 0) {\r",
+                      "        var firstItem = jsonData.items[0];\r",
+                      "        pm.expect(firstItem).to.have.property('id');\r",
+                      "        pm.expect(firstItem).to.have.property('name');\r",
+                      "        pm.expect(firstItem).to.have.property('neighborhoodId');\r",
+                      "    }\r",
+                      "});\r",
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {}
+                  }
+                }
+              ],
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{bearerToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/Streets?PageIndex=0&PageSize=5",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "Streets"],
+                  "query": [
+                    {
+                      "key": "PageIndex",
+                      "value": "0"
+                    },
+                    {
+                      "key": "PageSize",
+                      "value": "5"
+                    }
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "Success",
+                  "originalRequest": {
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer <token>",
+                        "description": "Added as a part of security scheme: bearer"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/Streets?PageIndex=<integer>&PageSize=<integer>",
+                      "host": ["{{baseUrl}}"],
+                      "path": ["api", "Streets"],
+                      "query": [
+                        {
+                          "key": "PageIndex",
+                          "value": "<integer>"
+                        },
+                        {
+                          "key": "PageSize",
+                          "value": "<integer>"
+                        }
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "text",
+                  "header": [],
+                  "cookie": [],
+                  "body": ""
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Addresses",
+          "item": [
+            {
+              "name": "{id}",
+              "item": [
+                {
+                  "name": "/api/Addresses/:id",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{bearerToken}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "DELETE",
+                    "header": [],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/Addresses/:id",
+                      "host": ["{{baseUrl}}"],
+                      "path": ["api", "Addresses", ":id"],
+                      "variable": [
+                        {
+                          "key": "id",
+                          "value": "<uuid>",
+                          "description": "(Required) "
+                        }
+                      ]
+                    }
+                  },
+                  "response": [
+                    {
+                      "name": "Success",
+                      "originalRequest": {
+                        "method": "DELETE",
+                        "header": [
+                          {
+                            "key": "Authorization",
+                            "value": "Bearer <token>",
+                            "description": "Added as a part of security scheme: bearer"
+                          }
+                        ],
+                        "url": {
+                          "raw": "http://localhost:60805/api/Addresses/:id",
+                          "protocol": "http",
+                          "host": ["localhost"],
+                          "port": "60805",
+                          "path": ["api", "Addresses", ":id"],
+                          "variable": [
+                            {
+                              "key": "id"
+                            }
+                          ]
+                        }
+                      },
+                      "status": "OK",
+                      "code": 200,
+                      "_postman_previewlanguage": "text",
+                      "header": [],
+                      "cookie": [],
+                      "body": ""
+                    }
+                  ]
+                },
+                {
+                  "name": "/api/Addresses/:id",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{bearerToken}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/Addresses/:id",
+                      "host": ["{{baseUrl}}"],
+                      "path": ["api", "Addresses", ":id"],
+                      "variable": [
+                        {
+                          "key": "id",
+                          "value": "<uuid>",
+                          "description": "(Required) "
+                        }
+                      ]
+                    }
+                  },
+                  "response": [
+                    {
+                      "name": "Success",
+                      "originalRequest": {
+                        "method": "GET",
+                        "header": [
+                          {
+                            "key": "Authorization",
+                            "value": "Bearer <token>",
+                            "description": "Added as a part of security scheme: bearer"
+                          }
+                        ],
+                        "url": {
+                          "raw": "http://localhost:60805/api/Addresses/:id",
+                          "protocol": "http",
+                          "host": ["localhost"],
+                          "port": "60805",
+                          "path": ["api", "Addresses", ":id"],
+                          "variable": [
+                            {
+                              "key": "id"
+                            }
+                          ]
+                        }
+                      },
+                      "status": "OK",
+                      "code": 200,
+                      "_postman_previewlanguage": "text",
+                      "header": [],
+                      "cookie": [],
+                      "body": ""
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "/api/Addresses",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "console.clear();\r",
+                      "\r",
+                      "// Rastgele bir string oluşturma fonksiyonu\r",
+                      "function generateRandomString(length) {\r",
+                      "    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';\r",
+                      "    let result = '';\r",
+                      "    for (let i = 0; i < length; i++) {\r",
+                      "        result += characters.charAt(Math.floor(Math.random() * characters.length));\r",
+                      "    }\r",
+                      "    return result;\r",
+                      "}\r",
+                      "\r",
+                      "// İstek gövdesi için rastgele değerler oluşturma\r",
+                      "const name = generateRandomString(10);\r",
+                      "const description = generateRandomString(20);\r",
+                      "const roles = [generateRandomString(5), generateRandomString(5)];\r",
+                      "const bypassCache = Math.random() < 0.5;\r",
+                      "const cacheKey = generateRandomString(10);\r",
+                      "const cacheGroupKey = [generateRandomString(10), generateRandomString(10)];\r",
+                      "\r",
+                      "// Adres detaylarını ilgili isteklerden otomatik olarak alma\r",
+                      "const cityId = pm.environment.get(\"cityId\");\r",
+                      "const districtId = pm.environment.get(\"districtId\");\r",
+                      "const neighborhoodId = pm.environment.get(\"neighborhoodId\")\r",
+                      "const streetId = pm.environment.get(\"streetId\")\r",
+                      "\r",
+                      "// Kontrol et ve logla\r",
+                      "console.log(\"cityId:\", cityId);\r",
+                      "console.log(\"districtId:\", districtId);\r",
+                      "console.log(\"neighborhoodId:\", neighborhoodId);\r",
+                      "console.log(\"streetId:\", streetId);\r",
+                      "\r",
+                      "// Tüm ID'lerin set edildiğinden emin ol\r",
+                      "if (!cityId || !districtId || !neighborhoodId || !streetId) {\r",
+                      "    console.error(\"Bir veya daha fazla ID değeri bulunamadı!\");\r",
+                      "    throw new Error(\"Eksik ID değerleri var.\");\r",
+                      "}\r",
+                      "\r",
+                      "// İstek gövdesini oluşturma\r",
+                      "const requestBody = {\r",
+                      "    addressListItemDto: {\r",
+                      "        neighborhoodId: neighborhoodId,\r",
+                      "        districtId: districtId,\r",
+                      "        cityId: cityId\r",
+                      "    },\r",
+                      "    streetId: streetId,\r",
+                      "    name: name,\r",
+                      "    description: description,\r",
+                      "    roles: roles,\r",
+                      "    bypassCache: bypassCache,\r",
+                      "    cacheKey: cacheKey,\r",
+                      "    cacheGroupKey: cacheGroupKey\r",
+                      "};\r",
+                      "\r",
+                      "// Log the request body for debugging\r",
+                      "console.log(\"Generated Request Body:\", requestBody);\r",
+                      "\r",
+                      "// İstek gövdesi için ortam değişkenini ayarlama\r",
+                      "pm.environment.set(\"requestBody\", JSON.stringify(requestBody));\r",
+                      "\r",
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {}
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "var jsonData = pm.response.json();\r",
+                      "\r",
+                      "pm.test(\"Successful POST request\", function () {\r",
+                      "    pm.expect(pm.response.code).to.be.oneOf([201, 202]);\r",
+                      "});\r",
+                      "\r",
+                      "pm.test(\"Response time is less than 200ms\", function () {\r",
+                      "    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+                      "});\r",
+                      "\r",
+                      "pm.test(\"Content-Type is present and is JSON\", function () {\r",
+                      "    pm.response.to.have.header(\"Content-Type\");\r",
+                      "    pm.response.to.have.header(\"Content-Type\", \"application/json; charset=utf-8\");\r",
+                      "});\r",
+                      "\r",
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {}
+                  }
+                }
+              ],
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{bearerToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{{requestBody}}\n\n// {\n//   \"addressListItemDto\": {\n//     \"neighborhoodId\": \"<uuid>\",\n//     \"districtId\": \"<uuid>\",\n//     \"cityId\": \"<uuid>\"\n//   },\n//   \"streetId\": \"<uuid>\",\n//   \"name\": \"<string>\",\n//   \"description\": \"<string>\",\n//   \"roles\": [\n//     \"<string>\",\n//     \"<string>\"\n//   ],\n//   \"bypassCache\": \"<boolean>\",\n//   \"cacheKey\": \"<string>\",\n//   \"cacheGroupKey\": [\n//     \"<string>\",\n//     \"<string>\"\n//   ]\n// }",
+                  "options": {
+                    "raw": {
+                      "headerFamily": "json",
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/Addresses",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "Addresses"]
+                }
+              },
+              "response": [
+                {
+                  "name": "Success",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer <token>",
+                        "description": "Added as a part of security scheme: bearer"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"addressListItemDto\": {\n    \"neighborhoodId\": \"<uuid>\",\n    \"districtId\": \"<uuid>\",\n    \"cityId\": \"<uuid>\"\n  },\n  \"streetId\": \"<uuid>\",\n  \"name\": \"<string>\",\n  \"description\": \"<string>\",\n  \"roles\": [\n    \"<string>\",\n    \"<string>\"\n  ],\n  \"bypassCache\": \"<boolean>\",\n  \"cacheKey\": \"<string>\",\n  \"cacheGroupKey\": [\n    \"<string>\",\n    \"<string>\"\n  ]\n}",
+                      "options": {
+                        "raw": {
+                          "headerFamily": "json",
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "http://localhost:60805/api/Addresses",
+                      "protocol": "http",
+                      "host": ["localhost"],
+                      "port": "60805",
+                      "path": ["api", "Addresses"]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "text",
+                  "header": [],
+                  "cookie": [],
+                  "body": ""
+                }
+              ]
+            },
+            {
+              "name": "/api/Addresses",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{bearerToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"id\": \"<uuid>\",\n  \"streetId\": \"<uuid>\",\n  \"name\": \"<string>\",\n  \"description\": \"<string>\",\n  \"roles\": [\n    \"<string>\",\n    \"<string>\"\n  ],\n  \"bypassCache\": \"<boolean>\",\n  \"cacheKey\": \"<string>\",\n  \"cacheGroupKey\": [\n    \"<string>\",\n    \"<string>\"\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "headerFamily": "json",
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/Addresses",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "Addresses"]
+                }
+              },
+              "response": [
+                {
+                  "name": "Success",
+                  "originalRequest": {
+                    "method": "PUT",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer <token>",
+                        "description": "Added as a part of security scheme: bearer"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"id\": \"<uuid>\",\n  \"streetId\": \"<uuid>\",\n  \"name\": \"<string>\",\n  \"description\": \"<string>\",\n  \"roles\": [\n    \"<string>\",\n    \"<string>\"\n  ],\n  \"bypassCache\": \"<boolean>\",\n  \"cacheKey\": \"<string>\",\n  \"cacheGroupKey\": [\n    \"<string>\",\n    \"<string>\"\n  ]\n}",
+                      "options": {
+                        "raw": {
+                          "headerFamily": "json",
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "http://localhost:60805/api/Addresses",
+                      "protocol": "http",
+                      "host": ["localhost"],
+                      "port": "60805",
+                      "path": ["api", "Addresses"]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "text",
+                  "header": [],
+                  "cookie": [],
+                  "body": ""
+                }
+              ]
+            },
+            {
+              "name": "/api/Addresses",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "// Parse the JSON response\r",
+                      "var jsonData = pm.response.json();\r",
+                      "\r",
+                      "// Test for status code 200\r",
+                      "pm.test(\"Status code is 200\", function () {\r",
+                      "    pm.response.to.have.status(200);\r",
+                      "});\r",
+                      "\r",
+                      "// Test for response time less than 200ms\r",
+                      "pm.test(\"Response time is less than 200ms\", function () {\r",
+                      "    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+                      "});\r",
+                      "\r",
+                      "// Test for Content-Type header\r",
+                      "pm.test(\"Content-Type is application/json; charset=utf-8\", function () {\r",
+                      "    pm.response.to.have.header(\"Content-Type\", \"application/json; charset=utf-8\");\r",
+                      "});\r",
+                      "\r",
+                      "// Check if the response has items\r",
+                      "pm.test(\"Response has items\", function () {\r",
+                      "    pm.expect(jsonData.items).to.be.an('array').that.is.not.empty;\r",
+                      "});\r",
+                      "\r",
+                      "// Check the structure of the first item\r",
+                      "pm.test(\"First item has required properties\", function () {\r",
+                      "    if (jsonData.items.length > 0) {\r",
+                      "        var firstItem = jsonData.items[0];\r",
+                      "        pm.expect(firstItem).to.have.property('id');\r",
+                      "        pm.expect(firstItem).to.have.property('streetId');\r",
+                      "        pm.expect(firstItem).to.have.property('name');\r",
+                      "        pm.expect(firstItem).to.have.property('description');\r",
+                      "    }\r",
+                      "});\r",
+                      "\r",
+                      "// Additional tests to verify pagination\r",
+                      "pm.test(\"Pagination properties are correct\", function () {\r",
+                      "    pm.expect(jsonData).to.have.property('index');\r",
+                      "    pm.expect(jsonData).to.have.property('size');\r",
+                      "    pm.expect(jsonData).to.have.property('count');\r",
+                      "    pm.expect(jsonData).to.have.property('pages');\r",
+                      "    pm.expect(jsonData).to.have.property('hasPrevious');\r",
+                      "    pm.expect(jsonData).to.have.property('hasNext');\r",
+                      "    pm.expect(jsonData.index).to.be.a('number');\r",
+                      "    pm.expect(jsonData.size).to.be.a('number');\r",
+                      "    pm.expect(jsonData.count).to.be.a('number');\r",
+                      "    pm.expect(jsonData.pages).to.be.a('number');\r",
+                      "    pm.expect(jsonData.hasPrevious).to.be.a('boolean');\r",
+                      "    pm.expect(jsonData.hasNext).to.be.a('boolean');\r",
+                      "});\r",
+                      "\r",
+                      "// Store the addressId of the first item\r",
+                      "if (jsonData.items && jsonData.items.length > 0) {\r",
+                      "    var addressId = jsonData.items[0].id;\r",
+                      "    pm.environment.set(\"addressId\", addressId);\r",
+                      "}\r",
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {}
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": ["console.clear()"],
+                    "type": "text/javascript",
+                    "packages": {}
+                  }
+                }
+              ],
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{bearerToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/Addresses?PageIndex=0&PageSize=5",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "Addresses"],
+                  "query": [
+                    {
+                      "key": "PageIndex",
+                      "value": "0"
+                    },
+                    {
+                      "key": "PageSize",
+                      "value": "5"
+                    }
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "Success",
+                  "originalRequest": {
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer <token>",
+                        "description": "Added as a part of security scheme: bearer"
+                      }
+                    ],
+                    "url": {
+                      "raw": "http://localhost:60805/api/Addresses?PageIndex=<integer>&PageSize=<integer>",
+                      "protocol": "http",
+                      "host": ["localhost"],
+                      "port": "60805",
+                      "path": ["api", "Addresses"],
+                      "query": [
+                        {
+                          "key": "PageIndex",
+                          "value": "<integer>"
+                        },
+                        {
+                          "key": "PageSize",
+                          "value": "<integer>"
+                        }
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "text",
+                  "header": [],
+                  "cookie": [],
+                  "body": ""
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "exec": [""]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "exec": [""]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseURL",
+      "value": "/",
+      "type": "string"
+    }
+  ]
+}
